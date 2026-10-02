@@ -568,7 +568,7 @@ for(let k=0;k<N;k++){
 const world=document.getElementById('world');
 const ship=document.getElementById('ship');
 const hint=document.getElementById('hint');
-let cur=0,zoomed=false,busy=false,shipPos={...HARBOR},flip=1;
+let cur=0,zoomed=false,busy=false,docked=true,shipPos={...HARBOR},flip=1;
 
 function setShip(x,y,f){shipPos={x,y};if(f)flip=f;ship.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${flip*.85},.85)`);}
 const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
@@ -628,7 +628,8 @@ function jumpToOverview(){
   requestAnimationFrame(()=>requestAnimationFrame(()=>world.classList.remove('instant')));
 }
 async function zoomOut(){
-  zoomed=false;
+  /* leaving the island page without finishing it: the ship is still anchored at cur, so Forward re-enters this island */
+  zoomed=false;docked=true;
   if(page.classList.contains('open')){await flipClosePage(()=>{jumpToOverview();updateDots();});}
   else{jumpToOverview();updateDots();}
 }
@@ -642,10 +643,9 @@ async function goTo(i){
 }
 async function run(fn){if(busy)return;busy=true;hint.classList.add('gone');try{await fn();}finally{busy=false;}}
 
-let docked=true;
 async function finishIsland(){
-  docked=false;
   await zoomOut();
+  docked=false;updateDots(); /* island cleared: Forward now sails on to the next one */
 }
 function next(){run(async()=>{
   if(zoomed){if(openIdx>=0&&slideIdx<slideCount(openIdx)-1){slideIdx++;await renderSlide(1);return;}await finishIsland();return;}
